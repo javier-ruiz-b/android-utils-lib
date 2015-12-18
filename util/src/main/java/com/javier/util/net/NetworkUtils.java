@@ -1,4 +1,4 @@
-package com.javier.util.io;
+package com.javier.util.net;
 
 import java.io.File;
 import java.io.FileOutputStream;
