@@ -17,11 +17,6 @@ public class LogHelper {
      */
     private static final String LOG_TAG = BuildConfig.APPLICATION_ID;
 
-    /**
-     * Stack trace level of the caller method
-     */
-    private static final int STACK_TRACE_LEVELS_UP = 5;// TODO: magic number
-
     //TODO: add warning and error methods
 
     /**
@@ -41,22 +36,15 @@ public class LogHelper {
      */
     public static void logEvent(String logTag, String message) {
         if (LOGGING_ENABLED) {
-            Log.d(logTag, getClassNameMethodNameAndLineNumber() + message);
+            Log.d(logTag, getSourceInformation() + message);
         }
     }
 
 
     /**
-     * Gets class name of the given stack trace element without the .java suffix
-     * @param element
-     * @return
+     * Stack trace element beginning from the start of the stack
      */
-    private static String getClassName(StackTraceElement element) {
-        String fileName = element.getFileName();
-
-        // Removing ".java" and returning class name
-        return fileName.substring(0, fileName.length() - 5);
-    }
+    private static Integer mStackTraceLevel = null;
 
     /**
      * Gets the stack trace of the caller method outside of this class
@@ -64,21 +52,33 @@ public class LogHelper {
      * @return Stack trace element
      */
     private static StackTraceElement getCallerStackTraceElement() {
-        return Thread.currentThread().getStackTrace()[STACK_TRACE_LEVELS_UP];
+        StackTraceElement[] elements = Thread.currentThread().getStackTrace();
+
+        //find stack trace level
+        if (mStackTraceLevel == null) {
+            mStackTraceLevel = 0;
+            while(!elements[mStackTraceLevel].getClassName().equals(LogHelper.class.getName())) {
+                mStackTraceLevel++;
+            }
+            while(elements[mStackTraceLevel].getClassName().equals(LogHelper.class.getName())) {
+                mStackTraceLevel++;
+            }
+        }
+
+        return elements[mStackTraceLevel];
     }
 
     /**
      * Returns the class name, method name, and line number from the currently
-     * executing log call in the form <class_name>.<method_name>()-<line_number>
+     * executing log call in the form <method_name>(<class>:<line_number>)
      *
      * @return String - String representing class name, method name, and line
      *         number.
      */
-    private static String getClassNameMethodNameAndLineNumber() {
+    private static String getSourceInformation() {
         StackTraceElement element = getCallerStackTraceElement();
-        return "[" + element.getClassName() + "." +
-                element.getMethodName() + "()-" +
-                element.getLineNumber() + "]: ";
+        return element.getMethodName()  +
+                "(" + element.getFileName() + ":" + element.getLineNumber() + ") ";
     }
 
 }
