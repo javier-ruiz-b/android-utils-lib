@@ -2,7 +2,11 @@ package com.javier.util;
 
 import android.util.Log;
 
+import java.util.Queue;
+
 /**
+ * Extends Android log functions.
+ *
  * Created by javier on 04.01.16.
  */
 public class LogHelper {
@@ -15,32 +19,47 @@ public class LogHelper {
     /**
      * Default LOG_TAG
      */
-    private static final String LOG_TAG = BuildConfig.APPLICATION_ID;
+    private static final String DEFAULT_TAG = BuildConfig.APPLICATION_ID;
 
-    //TODO: add warning and error methods
 
-    /**
-     * Log event by using the default tag {@link LogHelper#LOG_TAG}
-     *
-     * @param message
-     */
-    public static void logEvent(String message) {
-        logEvent(LOG_TAG, message);
+    // All the methods must call the logWriter directly, so the caller method would be at the same
+    // stack trace index
+
+    public static void logFatal(String message) {
+        logWriter(LogPriority.FATAL, DEFAULT_TAG, message);
     }
 
-    /**
-     * Log event by using a custom tag
-     *
-     * @param logTag
-     * @param message
-     */
-    public static void logEvent(String logTag, String message) {
+    public static void logWarning(String message) {
+        logWriter(LogPriority.WARN, DEFAULT_TAG, message);
+    }
+
+    public static void logError(String message) {
+        logWriter(LogPriority.ERROR, DEFAULT_TAG, message);
+    }
+
+    public static void log(String message) {
+        logWriter(LogPriority.DEBUG, DEFAULT_TAG, message);
+    }
+
+    public static void log(LogPriority priority,
+                           String message) {
+        logWriter(priority, DEFAULT_TAG, message);
+    }
+
+    public static void log(LogPriority priority,
+                           String tag,
+                           String message) {
+        logWriter(priority, tag, message);
+    }
+    private static void logWriter(LogPriority priority,
+                                  String tag,
+                                  String message)  {
         if (LOGGING_ENABLED) {
-            Log.d(logTag, getSourceInformation() + message);
+            message = getSourceInformation() + message;
+            message = getThreadInformation() + message;
+            Log.println(priority.getId(), tag, message);
         }
     }
-
-
     /**
      * Stack trace element beginning from the start of the stack
      */
@@ -81,4 +100,50 @@ public class LogHelper {
                 "(" + element.getFileName() + ":" + element.getLineNumber() + ") ";
     }
 
+    private static String getThreadInformation() {
+        Thread thread = Thread.currentThread();
+        return "thread " + thread.getId() + ": ";
+    }
+
+    public enum LogPriority {
+        UNKNOWN(0),
+        DEFAULT(1),
+        VERBOSE(2),
+        DEBUG(3),
+        INFO(4),
+        WARN(5),
+        ERROR(6),
+        FATAL(7),
+        SILENT(8);
+
+        private int mId;
+
+        LogPriority(int id) {
+            mId = id;
+        }
+
+        public int getId() {
+            return mId;
+        }
+        public String getString() {
+            switch (this){
+                case DEFAULT:
+                    return "Default";
+                case VERBOSE:
+                    return "V";
+                case DEBUG:
+                    return "D";
+                case INFO:
+                    return "I";
+                case WARN:
+                    return "W";
+                case ERROR:
+                    return "E";
+                case FATAL:
+                    return "F";
+                default:
+                    return "U";
+            }
+        }
+    }
 }
